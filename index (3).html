@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Sessions</title>
+<script>
+try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}
+</script>
+<style>
+:root{
+  --bg:#f5f3ee; --surface:#ffffff; --ink:#1b1d1a; --muted:#6b6f68; --line:#e3e0d7;
+  --accent:#e4572e; --accent-ink:#ffffff;
+  --ok:#1f8a4c; --ok-bg:#e3f4ea; --warn:#b36a00; --warn-bg:#fbeed4;
+  --bad:#b3261e; --bad-bg:#fbe4e2; --idle:#6b6f68; --idle-bg:#ecebe5;
+  --radius:14px; --shadow:0 1px 2px rgba(0,0,0,.05),0 6px 18px rgba(0,0,0,.04);
+}
+:root{color-scheme:light}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121411; --surface:#1b1e1a; --ink:#ecebe5; --muted:#9a9e95; --line:#2b2f29;
+    --accent:#ff7a50; --accent-ink:#1b1d1a;
+    --ok:#5fd18a; --ok-bg:#16301f; --warn:#f0b34d; --warn-bg:#352a12;
+    --bad:#ff8a80; --bad-bg:#381a18; --idle:#9a9e95; --idle-bg:#252822;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121411; --surface:#1b1e1a; --ink:#ecebe5; --muted:#9a9e95; --line:#2b2f29;
+    --accent:#ff7a50; --accent-ink:#1b1d1a;
+    --ok:#5fd18a; --ok-bg:#16301f; --warn:#f0b34d; --warn-bg:#352a12;
+    --bad:#ff8a80; --bad-bg:#381a18; --idle:#9a9e95; --idle-bg:#252822;
+    --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+
+/* header */
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:12px;height:58px}
+.brand{font-weight:800;letter-spacing:-.02em;font-size:18px;display:flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.spacer{flex:1}
+.pill{font-size:12px;padding:4px 10px;border-radius:99px;background:var(--idle-bg);color:var(--muted);white-space:nowrap}
+.pill.low{background:var(--warn-bg);color:var(--warn)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn[disabled]{opacity:.55;cursor:default}
+.btn.sm{padding:5px 10px;font-size:13px}
+.theme{width:36px;height:34px;padding:0;display:grid;place-items:center;font-size:16px;line-height:1}
+
+/* login */
+.login{max-width:400px;margin:9vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)}
+.login h1{margin:0 0 4px;font-size:26px;letter-spacing:-.03em}
+.login p{margin:0 0 20px;color:var(--muted)}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 5px}
+input[type=text],input[type=email],input[type=password],input[type=search],textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.login .btn.primary{width:100%;margin-top:20px;padding:11px}
+.row{display:flex;gap:10px;align-items:center}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;padding:0;font-size:13px}
+.err{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--bad-bg);color:var(--bad);font-size:14px}
+.note{font-size:12.5px;color:var(--muted);margin-top:16px}
+
+/* layout */
+main{padding:20px 0 60px;display:grid;gap:20px;grid-template-columns:300px minmax(0,1fr);align-items:start}
+@media (max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.side{padding:14px;position:sticky;top:76px;max-height:calc(100vh - 96px);display:flex;flex-direction:column}
+@media (max-width:860px){.side{position:static;max-height:none}}
+.side h2{margin:2px 4px 10px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.acts{overflow:auto;margin:10px -4px 0;padding:0 4px;display:grid;gap:6px}
+@media (max-width:860px){.acts{max-height:260px}}
+.act{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:8px;border-radius:12px;border:1px solid transparent;background:none}
+.act:hover{background:var(--bg)}
+.act[aria-pressed=true]{background:var(--bg);border-color:var(--accent)}
+.thumb{width:44px;height:44px;border-radius:10px;background:var(--idle-bg);object-fit:cover;flex:none;display:grid;place-items:center;color:var(--muted);font-weight:800;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.act b{display:block;font-size:14px;line-height:1.2}
+.act small{color:var(--muted);font-size:12px}
+.act.disabled{opacity:.5}
+
+/* panel */
+.panel{padding:20px}
+.empty{padding:60px 20px;text-align:center;color:var(--muted)}
+.title{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline}
+.title h2{margin:0;font-size:24px;letter-spacing:-.02em}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.chip{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--idle-bg);color:var(--muted)}
+.days{display:flex;gap:8px;overflow-x:auto;padding:16px 0 6px;scrollbar-width:thin}
+.day{flex:none;min-width:62px;padding:8px 6px;text-align:center;border:1px solid var(--line);background:var(--surface);border-radius:12px;position:relative}
+.day small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.day b{font-size:18px;display:block;line-height:1.2}
+.day[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.day[aria-pressed=true] small{color:inherit;opacity:.85}
+.day[disabled]{opacity:.35;cursor:default}
+.day .tag{position:absolute;top:-6px;right:-4px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--ok);color:var(--surface)}
+.day .tag.none{background:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:10px 0 14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:7px 12px;font-size:13px}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.slots{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.slot{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface);display:grid;gap:10px}
+.slot .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.slot .time{font-size:20px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.b-ok{background:var(--ok-bg);color:var(--ok)}
+.b-warn{background:var(--warn-bg);color:var(--warn)}
+.b-bad{background:var(--bad-bg);color:var(--bad)}
+.b-idle{background:var(--idle-bg);color:var(--idle)}
+.bar2{height:7px;border-radius:99px;background:var(--idle-bg);overflow:hidden}
+.bar2 i{display:block;height:100%;border-radius:99px;background:var(--ok)}
+.bar2 i.mid{background:var(--warn)} .bar2 i.full{background:var(--bad)}
+.slot .sub{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.slot.past,.slot.off{opacity:.55}
+.state{padding:40px 10px;text-align:center;color:var(--muted)}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+.demo{background:var(--warn-bg);color:var(--warn);text-align:center;font-size:13px;padding:6px}
+button.pill{border:0;cursor:pointer;font:inherit;font-size:12px}
+label.check{display:flex;align-items:center;gap:8px;margin:16px 0 0;font-size:13px;color:var(--muted);cursor:pointer}
+label.check input{width:auto;margin:0;accent-color:var(--accent)}
+.switch{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px;font-size:13px}
+.switch:hover{border-color:var(--muted)}
+.switch .track{width:30px;height:18px;border-radius:99px;background:var(--idle-bg);border:1px solid var(--line);position:relative;transition:background .15s}
+.switch .track::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--muted);transition:left .15s,background .15s}
+.switch[aria-checked=true] .track{background:var(--accent);border-color:transparent}
+.switch[aria-checked=true] .track::after{left:13px;background:var(--accent-ink)}
+.tools .row{flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div id="demoBanner" class="demo hidden">Demo mode — the data below is made up. Log in to see the real sessions.</div>
+
+<header>
+  <div class="wrap bar">
+    <div class="brand"><span class="dot"></span>Campus Sessions</div>
+    <div class="spacer"></div>
+    <span id="rate" class="pill hidden" title="Requests left in the current rate-limit window"></span>
+    <button id="watchPill" class="pill hidden" type="button"></button>
+    <span id="who" class="pill hidden"></span>
+    <button id="logout" class="btn sm hidden">Log out</button>
+    <button id="themeBtn" class="btn theme" type="button"></button>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<section id="loginView" class="wrap">
+  <form id="loginForm" class="login" autocomplete="on">
+    <h1>See open sessions</h1>
+    <p>Log in with your campus account to browse activities and free time slots.</p>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required autocomplete="username" placeholder="firstname.lastname@um6p.ma">
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required autocomplete="current-password">
+    <div id="tokenBox" class="hidden">
+      <label for="token">Bearer token</label>
+      <textarea id="token" rows="3" placeholder="eyJ0eXAiOiJKV1Qi…"></textarea>
+    </div>
+    <label class="check"><input type="checkbox" id="remember" checked> Keep me logged in on this device</label>
+    <button class="btn primary" type="submit" id="loginBtn">Log in</button>
+    <div id="loginErr" class="err hidden" role="alert"></div>
+    <div class="row" style="justify-content:space-between;margin-top:14px">
+      <button type="button" class="link" id="toggleToken">Use a token instead</button>
+      <button type="button" class="link" id="demoBtn">Try demo data</button>
+    </div>
+    <p class="note">Your password is sent only to the campus API and is never saved. With “Keep me logged in”, only the session token is stored in this browser until you log out or it expires.</p>
+  </form>
+</section>
+
+<!-- APP -->
+<div id="appView" class="wrap hidden">
+  <main>
+    <aside class="card side">
+      <h2>Activities</h2>
+      <input id="q" type="search" placeholder="Search…" aria-label="Search activities">
+      <div id="acts" class="acts"></div>
+    </aside>
+    <section class="card panel" id="panel">
+      <div class="empty">Pick an activity to see its sessions.</div>
+    </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+/* ---------- config (from the captured traffic) ---------- */
+const CFG = {
+  base: "https://campus-api.um6p.ma",
+  serviceId: 1370,           // service_id sent with /prestation/list
+  maxDays: 30,               // never offer more than this many days ahead
+  pollMs: 90000,             // how often watched activities are re-checked
+};
+
+/* ---------- tiny helpers ---------- */
+const $ = id => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(c));
+  return n;
+};
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+/* "Keep me logged in": token (and display name) live in localStorage; otherwise in sessionStorage (this tab only) */
+const getStore = remember => { try { return remember ? localStorage : sessionStorage; } catch { return null; } };
+function clearSession() {
+  for (const r of [true, false]) { const st = getStore(r); try { st?.removeItem("token"); st?.removeItem("user"); } catch {} }
+}
+function saveSession(remember) {
+  clearSession();
+  const st = getStore(remember); if (!st || !S.token) return;
+  try {
+    st.setItem("token", S.token);
+    if (S.user && S.user.name) st.setItem("user", JSON.stringify({ name: S.user.name }));
+  } catch {}
+}
+function loadSession() {
+  for (const r of [true, false]) {
+    const st = getStore(r); if (!st) continue;
+    try {
+      const token = st.getItem("token");
+      if (token) { let user = null; try { user = JSON.parse(st.getItem("user") || "null"); } catch {} return { token, user }; }
+    } catch {}
+  }
+  return null;
+}
+function tokenExpired(t) {                       // JWT "exp" check; anything unreadable counts as "not expired"
+  try {
+    const p = JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return !!p.exp && p.exp * 1000 < Date.now();
+  } catch { return false; }
+}
+
+/* ---------- state ---------- */
+let _sess = loadSession(), _expired = false;
+if (_sess && tokenExpired(_sess.token)) { clearSession(); _sess = null; _expired = true; }
+const S = {
+  token: _sess ? _sess.token : null, user: _sess ? _sess.user : null, demo: false,
+  acts: [], active: null, date: null,
+  onlyOpen: true, rate: null,
+  cache: new Map(),        // "actId|date" -> slots[]
+  scan: new Map(),         // "actId|date" -> open count
+  scanning: false, reqId: 0,
+};
+
+/* ---------- API ---------- */
+class ApiError extends Error { constructor(msg, status) { super(msg); this.status = status; } }
+
+async function api(path, { form, json, auth = true } = {}) {
+  if (S.demo) return demoApi(path, form);
+  const headers = { Accept: "application/json" };
+  let body;
+  if (json) { headers["Content-Type"] = "application/json"; body = JSON.stringify(json); }
+  else if (form) { headers["Content-Type"] = "application/x-www-form-urlencoded"; body = new URLSearchParams(form).toString(); }
+  if (auth && S.token) headers.Authorization = "Bearer " + S.token;
+  let res;
+  try { res = await fetch(CFG.base + path, { method: "POST", headers, body }); }
+  catch (e) {
+    throw new ApiError("Couldn't reach the campus API. If you opened this file from disk and the browser blocks the request (CORS), serve it with a tiny local server — see the note at the bottom of the file.", 0);
+  }
+  const lim = res.headers.get("X-RateLimit-Limit"), rem = res.headers.get("X-RateLimit-Remaining");
+  if (lim != null && rem != null) { S.rate = { limit: +lim, remaining: +rem }; renderRate(); }
+  if (res.status === 401) { if (auth) signOut("Your session expired — please log in again."); throw new ApiError("Unauthorized", 401); }
+  if (res.status === 429) throw new ApiError("Rate limit reached — wait a minute and try again.", 429);
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok) throw new ApiError((data && (data.message || data.error)) || `Request failed (${res.status})`, res.status);
+  return data;
+}
+
+async function paged(path, form) {
+  // Follows whatever pagination info the endpoint gives (last_page, next_page_url),
+  // and falls back to "keep going until a page is empty or adds nothing new".
+  const out = [], seen = new Set(); let page = 1;
+  for (;;) {
+    const r = await api(path, { form: { ...form, page } });
+    const rows = Array.isArray(r) ? r : (r.data || []);
+    const fresh = rows.filter(x => x.id == null || !seen.has(x.id));
+    fresh.forEach(x => x.id != null && seen.add(x.id));
+    out.push(...fresh);
+    if (Array.isArray(r) || !rows.length || !fresh.length || page >= 15) break;
+    if (r.last_page != null) { if (page >= r.last_page) break; }
+    else if ("next_page_url" in r) { if (!r.next_page_url) break; }
+    page++;
+  }
+  return out;
+}
+
+const loadActivities = () => paged("/api/prestation/list", { service_id: CFG.serviceId });
+async function loadSlots(act, date) {
+  const key = act.id + "|" + date;
+  if (S.cache.has(key)) return S.cache.get(key);
+  const slots = await paged(`/api/prestation/timeslotes/${act.id}`, { date_start: date, date_end: date });
+  S.cache.set(key, slots);
+  S.scan.set(key, slots.filter(s => statusOf(s, date).open).length);
+  return slots;
+}
+
+/* ---------- slot status ---------- */
+function statusOf(s, date) {
+  const cap = +s.capacity || 0, taken = +s.number || 0, left = Math.max(0, cap - taken);
+  const end = new Date(date + "T" + (s.time_end || "23:59") + ":00");
+  const base = { cap, taken, left, approved: +s.approved || 0 };
+  if (s.is_maintenance) return { ...base, label: "Maintenance", cls: "b-idle", off: true };
+  if (s.is_pause)       return { ...base, label: "Paused", cls: "b-idle", off: true };
+  if (end < new Date()) return { ...base, label: "Passed", cls: "b-idle", past: true };
+  if (cap && left === 0) {
+    return s.waiting_list
+      ? { ...base, label: "Full · waitlist", cls: "b-warn", full: true }
+      : { ...base, label: "Full", cls: "b-bad", full: true };
+  }
+  if (s.canbook) return { ...base, label: "Open", cls: "b-ok", open: true };
+  return { ...base, label: "Not bookable yet", cls: "b-idle", off: true };
+}
+
+/* ---------- views ---------- */
+function show(view) {
+  $("loginView").classList.toggle("hidden", view !== "login");
+  $("appView").classList.toggle("hidden", view !== "app");
+  const inApp = view === "app";
+  $("logout").classList.toggle("hidden", !inApp);
+  $("who").classList.toggle("hidden", !inApp || !S.user);
+  $("demoBanner").classList.toggle("hidden", !(inApp && S.demo));
+  renderWatchPill();
+}
+function renderRate() {
+  const p = $("rate");
+  if (!S.rate || S.demo) { p.classList.add("hidden"); return; }
+  p.classList.remove("hidden");
+  p.textContent = `${S.rate.remaining}/${S.rate.limit} requests left`;
+  p.classList.toggle("low", S.rate.remaining <= 5);
+}
+function signOut(msg) {
+  clearSession(); clearTimeout(WATCH.timer); WATCH.base.clear(); WATCH.open.clear();
+  Object.assign(S, { token: null, user: null, demo: false, acts: [], active: null, date: null, rate: null });
+  S.cache.clear(); S.scan.clear();
+  renderRate(); show("login");
+  if (msg) showLoginErr(msg);
+}
+function showLoginErr(m) { const e = $("loginErr"); e.textContent = m; e.classList.toggle("hidden", !m); }
+
+async function enterApp() {
+  show("app");
+  $("who").textContent = S.user ? S.user.name : "Signed in";
+  $("who").classList.remove("hidden");
+  $("acts").replaceChildren(el("div", { class: "state" }, el("span", { class: "spin" }), "Loading activities…"));
+  try {
+    S.acts = (await loadActivities()).sort((a, b) => (b.enable - a.enable) || a.name.localeCompare(b.name));
+    renderActs();
+    if (S.acts[0]) selectAct(S.acts.find(a => +a.enable === 1) || S.acts[0]);
+    restartWatcher();
+  } catch (e) {
+    if (e.status !== 401) $("acts").replaceChildren(el("div", { class: "err" }, e.message));
+  }
+}
+
+function renderActs() {
+  const q = $("q").value.trim().toLowerCase();
+  const list = S.acts.filter(a => !q || (a.name + " " + (a.campus?.name || "")).toLowerCase().includes(q));
+  $("acts").replaceChildren(...(list.length ? list.map(a => {
+    const th = el("span", { class: "thumb" }, (a.name || "?")[0]);
+    if (a.image) {
+      const img = el("img", { src: `${CFG.base}/storage/${String(a.image).replace(/\\/g, "")}`, alt: "", loading: "lazy" });
+      img.onerror = () => img.remove();
+      th.replaceChildren(img, (a.name || "?")[0]);
+      img.onload = () => { th.childNodes[1]?.remove(); };
+    }
+    return el("button", { class: "act" + (+a.enable ? "" : " disabled"), "aria-pressed": String(S.active?.id === a.id), onclick: () => selectAct(a) },
+      th, el("span", {}, el("b", {}, a.name), el("small", {}, [a.campus?.name, a.duration && a.duration + " min"].filter(Boolean).join(" · "))));
+  }) : [el("div", { class: "state" }, "No activity matches.")]));
+}
+
+/* the days offered for an activity */
+function daysFor(a) {
+  const allowed = new Set((a.availabledays || ["1","2","3","4","5","6","7"]).map(String));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let last = new Date(today); last.setDate(last.getDate() + CFG.maxDays);
+  if (a.date_limit) { const dl = parseYmd(a.date_limit); if (dl < last) last = dl; }
+  if (a.date_end)   { const de = parseYmd(a.date_end);   if (de < last) last = de; }
+  const out = [];
+  for (let d = new Date(today); d <= last; d.setDate(d.getDate() + 1)) {
+    const dow = d.getDay() === 0 ? 7 : d.getDay();            // 1 = Mon … 7 = Sun
+    out.push({ date: ymd(d), d: new Date(d), ok: allowed.has(String(dow)) });
+  }
+  return out;
+}
+
+function selectAct(a) {
+  S.active = a; S.reqId++;
+  const days = daysFor(a);
+  const first = days.find(x => x.ok);
+  S.date = first ? first.date : null;
+  renderActs(); renderPanel();
+}
+
+function renderPanel() {
+  const a = S.active, P = $("panel");
+  if (!a) return;
+  const days = daysFor(a);
+  const meta = [
+    a.campus?.name && ["📍", a.campus.name],
+    a.duration && ["⏱", a.duration + " min"],
+    a.capacity && ["👥", "capacity " + a.capacity],
+    a.max_book && ["🎟", "max " + a.max_book + " bookings"],
+    a.max_week && ["📅", a.max_week + "/week"],
+    a.date_limit && ["🔒", "bookable until " + a.date_limit],
+    !+a.enable && ["⛔", "disabled"],
+  ].filter(Boolean);
+
+  const dayBtns = days.map(x => {
+    const n = S.scan.get(a.id + "|" + x.date);
+    const tag = n == null ? null : el("span", { class: "tag" + (n ? "" : " none") }, n);
+    return el("button", { class: "day", disabled: !x.ok, "aria-pressed": String(x.date === S.date),
+      title: x.ok ? "" : "Not available on this weekday",
+      onclick: () => { S.date = x.date; renderPanel(); } },
+      el("small", {}, x.d.toLocaleDateString(undefined, { weekday: "short" })),
+      el("b", {}, x.d.getDate()),
+      el("small", {}, x.d.toLocaleDateString(undefined, { month: "short" })), tag);
+  });
+
+  const seg = el("div", { class: "seg", role: "group", "aria-label": "Filter" },
+    el("button", { "aria-pressed": String(S.onlyOpen), onclick: () => { S.onlyOpen = true; renderPanel(); } }, "Open only"),
+    el("button", { "aria-pressed": String(!S.onlyOpen), onclick: () => { S.onlyOpen = false; renderPanel(); } }, "All slots"));
+  const scanBtn = el("button", { class: "btn sm", id: "scanBtn", disabled: S.scanning, onclick: scanWeek },
+    S.scanning ? "Scanning…" : "Check next 7 days");
+
+  const watched = isWatched(a);
+  const sw = el("button", { class: "switch", id: "watchSw", type: "button", role: "switch", "aria-checked": String(watched),
+    title: "Get an alert when a spot opens for this activity", onclick: () => setWatch(a, !isWatched(a)) },
+    el("span", { class: "track" }), "Notify me");
+  const slotsBox = el("div", { id: "slots" });
+  P.replaceChildren(
+    el("div", { class: "title" }, el("h2", {}, a.name), a.description && a.description !== a.name && el("span", { class: "chip" }, a.description)),
+    el("div", { class: "meta" }, meta.map(([i, t]) => el("span", { class: "chip" }, i + " " + t))),
+    el("div", { class: "days", role: "group", "aria-label": "Day" }, dayBtns),
+    el("div", { class: "tools" }, seg, el("div", { class: "row" }, sw, scanBtn)),
+    watched && el("div", { class: "note", style: "margin:-4px 0 12px" },
+      `Alerts on: checking the next 7 days every ${Math.round(CFG.pollMs / 1000)} s while this page stays open.`),
+    slotsBox);
+  P.querySelector('.day[aria-pressed="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
+  renderSlots(slotsBox);
+}
+
+async function renderSlots(box) {
+  const a = S.active, date = S.date, id = ++S.reqId;
+  if (!date) { box.replaceChildren(el("div", { class: "state" }, "No bookable days for this activity.")); return; }
+  const key = a.id + "|" + date;
+  if (!S.cache.has(key)) box.replaceChildren(el("div", { class: "state" }, el("span", { class: "spin" }), "Loading sessions…"));
+  let slots;
+  try { slots = await loadSlots(a, date); }
+  catch (e) { if (id === S.reqId && e.status !== 401) box.replaceChildren(el("div", { class: "err" }, e.message)); return; }
+  if (id !== S.reqId) return;                       // user moved on
+  updateDayTag(a, date);
+
+  const rows = slots.map(s => ({ s, st: statusOf(s, date) }))
+    .sort((x, y) => String(x.s.time_start).localeCompare(String(y.s.time_start)));
+  const shown = S.onlyOpen ? rows.filter(r => r.st.open) : rows;
+  const nOpen = rows.filter(r => r.st.open).length;
+  const head = el("div", { class: "sub", style: "margin:0 0 10px;color:var(--muted);font-size:13px" },
+    `${parseYmd(date).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })} — ${nOpen} open of ${rows.length} slots`);
+  if (!shown.length) {
+    box.replaceChildren(head, el("div", { class: "state" }, rows.length ? "Nothing open on this day. Try “All slots” or another date." : "No sessions scheduled for this day."));
+    return;
+  }
+  box.replaceChildren(head, el("div", { class: "slots" }, shown.map(({ s, st }) => {
+    const pct = st.cap ? Math.min(100, Math.round(st.taken / st.cap * 100)) : 0;
+    const fill = pct >= 100 ? "full" : pct >= 75 ? "mid" : "";
+    return el("div", { class: "slot" + (st.past ? " past" : "") + (st.off ? " off" : ""), title: `Approved: ${st.approved}` },
+      el("div", { class: "top" }, el("span", { class: "time" }, `${s.time_start} – ${s.time_end}`), el("span", { class: "badge " + st.cls }, st.label)),
+      el("div", { class: "bar2" }, el("i", { class: fill, style: `width:${pct}%` })),
+      el("div", { class: "sub" }, el("span", {}, st.cap ? `${st.left} of ${st.cap} spots left` : "—"),
+        el("span", {}, s.waiting_list && st.full ? `${s.waiting_available ?? 0} waitlist spots` : `${st.taken} booked`)));
+  })));
+}
+
+function updateDayTag(a, date) {
+  const n = S.scan.get(a.id + "|" + date);
+  if (n == null) return;
+  const idx = daysFor(a).findIndex(x => x.date === date);
+  const btn = $("panel").querySelectorAll(".day")[idx];
+  if (!btn) return;
+  btn.querySelector(".tag")?.remove();
+  btn.append(el("span", { class: "tag" + (n ? "" : " none") }, n));
+}
+
+/* sequential, rate-limit-aware scan of the next 7 bookable days */
+async function scanWeek() {
+  const a = S.active; if (!a || S.scanning) return;
+  S.scanning = true; renderPanel();
+  try {
+    const targets = daysFor(a).filter(x => x.ok).slice(0, 7);
+    for (const x of targets) {
+      if (S.active !== a) break;
+      if (S.rate && S.rate.remaining <= 3) { toast("Stopped early to stay under the rate limit."); break; }
+      await loadSlots(a, x.date);
+      if (S.active === a) { updateDayTag(a, x.date); }
+    }
+  } catch (e) { if (e.status !== 401) toast(e.message); }
+  S.scanning = false;
+  if (S.active === a) renderPanel();
+}
+function toast(m, onclick, ms = 4000) {
+  const n = document.querySelectorAll(".toast").length;
+  const t = el("div", { class: "pill low toast", style: `position:fixed;left:50%;bottom:${20 + n * 48}px;transform:translateX(-50%);z-index:9;padding:8px 14px;max-width:92vw;white-space:normal;text-align:center${onclick ? ";cursor:pointer" : ""}` }, m);
+  if (onclick) t.addEventListener("click", () => { onclick(); t.remove(); });
+  document.body.append(t); setTimeout(() => t.remove(), ms);
+}
+
+/* ---------- alerts: watch an activity, get notified when a slot opens ---------- */
+const WATCH = {
+  ids: new Set((() => { try { return JSON.parse(localStorage.getItem("watch") || "[]").map(String); } catch { return []; } })()),
+  base: new Set(),         // "actId|date" already snapshotted once (first pass never alerts)
+  open: new Map(),         // "actId|date|slotId" -> was open on last check
+  timer: null, running: false, ctx: null,
+};
+const isWatched = a => WATCH.ids.has(String(a.id));
+const saveWatch = () => { try { localStorage.setItem("watch", JSON.stringify([...WATCH.ids])); } catch {} };
+
+async function setWatch(a, on) {
+  const id = String(a.id);
+  if (on) {
+    WATCH.ids.add(id); primeAudio();
+    if ("Notification" in window && Notification.permission === "default") {
+      try { await Notification.requestPermission(); } catch {}
+    }
+    if (!("Notification" in window) || Notification.permission !== "granted")
+      toast("Browser notifications are blocked — you'll still get an in-page alert and a sound.", null, 6000);
+  } else {
+    WATCH.ids.delete(id);
+    for (const k of [...WATCH.base]) if (k.startsWith(id + "|")) WATCH.base.delete(k);
+    for (const k of [...WATCH.open.keys()]) if (k.startsWith(id + "|")) WATCH.open.delete(k);
+  }
+  saveWatch(); renderWatchPill(); restartWatcher();
+  if (S.active) renderPanel();
+}
+function renderWatchPill() {
+  const p = $("watchPill"), n = WATCH.ids.size;
+  const inApp = !$("appView").classList.contains("hidden");
+  p.classList.toggle("hidden", !inApp || !n);
+  p.textContent = `🔔 ${n} watching`; p.title = "Click to turn off all alerts";
+}
+$("watchPill").addEventListener("click", () => {
+  if (!confirm("Turn off alerts for all activities?")) return;
+  WATCH.ids.clear(); WATCH.base.clear(); WATCH.open.clear();
+  saveWatch(); renderWatchPill(); restartWatcher(); if (S.active) renderPanel();
+});
+
+function restartWatcher() {
+  clearTimeout(WATCH.timer); WATCH.timer = null;
+  if (WATCH.ids.size && (S.token || S.demo) && !WATCH.running) WATCH.timer = setTimeout(tick, 1500);
+}
+async function fetchFresh(a, date) {               // bypasses the cache, then refreshes it
+  const slots = await paged(`/api/prestation/timeslotes/${a.id}`, { date_start: date, date_end: date });
+  const key = a.id + "|" + date;
+  S.cache.set(key, slots);
+  S.scan.set(key, slots.filter(s => statusOf(s, date).open).length);
+  return slots;
+}
+async function tick() {
+  if (WATCH.running) return;
+  WATCH.running = true;
+  try {
+    for (const id of [...WATCH.ids]) {
+      const a = S.acts.find(x => String(x.id) === id);
+      if (!a) continue;
+      const found = [];
+      for (const x of daysFor(a).filter(d => d.ok).slice(0, 7)) {
+        if (!WATCH.ids.has(id) || !(S.token || S.demo)) break;
+        if (S.rate && S.rate.remaining <= 30) return;            // stay well under the rate limit
+        const slots = await fetchFresh(a, x.date);
+        const baseKey = id + "|" + x.date;
+        let changed = false;
+        for (const s of slots) {
+          const k = baseKey + "|" + (s.id ?? s.time_start);
+          const now = !!statusOf(s, x.date).open, was = WATCH.open.get(k);
+          if (WATCH.base.has(baseKey) && now && !was) found.push({ date: x.date, s });
+          if (was !== now) changed = true;
+          WATCH.open.set(k, now);
+        }
+        WATCH.base.add(baseKey);
+        if (S.active === a) {
+          updateDayTag(a, x.date);
+          if (changed && S.date === x.date && $("slots")) renderSlots($("slots"));
+        }
+      }
+      notifyOpened(a, found);
+    }
+  } catch (e) { /* network hiccup or 429: just try again next round */ }
+  finally {
+    WATCH.running = false;
+    if (WATCH.ids.size && (S.token || S.demo)) WATCH.timer = setTimeout(tick, CFG.pollMs);
+  }
+}
+
+function jumpTo(a, date) { S.active = a; S.reqId++; S.date = date; renderActs(); renderPanel(); }
+function notifyOpened(a, found) {
+  if (!found.length) return;
+  const fmt = ({ date, s }) => `${parseYmd(date).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} ${s.time_start}–${s.time_end}`;
+  const lines = found.slice(0, 4).map(fmt), more = found.length > 4 ? ` (+${found.length - 4} more)` : "";
+  const title = `${a.name}: ${found.length} spot${found.length > 1 ? "s" : ""} open`;
+  let shown = false;
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      const n = new Notification(title, { body: lines.join("\n") + more, tag: "act-" + a.id });
+      n.onclick = () => { window.focus(); n.close(); jumpTo(a, found[0].date); };
+      shown = true;
+    } catch {}
+  }
+  beep(); flashTitle(title);
+  if (!shown || !document.hidden) toast(`${title} — ${lines[0]}${more}`, () => jumpTo(a, found[0].date), 12000);
+}
+function primeAudio() {
+  try { WATCH.ctx = WATCH.ctx || new (window.AudioContext || window.webkitAudioContext)(); WATCH.ctx.resume?.(); } catch {}
+}
+function beep() {
+  const c = WATCH.ctx; if (!c) return;
+  try {
+    const o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+    o.type = "sine"; o.frequency.value = 880;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .45);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .5);
+  } catch {}
+}
+const baseTitle = document.title; let flashT = null;
+function flashTitle(msg) {
+  clearInterval(flashT); if (!document.hidden) return;
+  let on = false; document.title = msg;
+  flashT = setInterval(() => { on = !on; document.title = on ? baseTitle : msg; }, 1000);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { clearInterval(flashT); document.title = baseTitle; } });
+document.addEventListener("click", primeAudio, { once: true });   // unlock sound after a reload
+
+/* ---------- login flow ---------- */
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault(); showLoginErr("");
+  const btn = $("loginBtn"); btn.disabled = true; btn.textContent = "Logging in…";
+  try {
+    if (!$("tokenBox").classList.contains("hidden") && $("token").value.trim()) {
+      S.token = $("token").value.trim().replace(/^bearer\s+/i, "");
+    } else {
+      const r = await api("/api/login", { json: { email: $("email").value.trim(), password: $("password").value }, auth: false });
+      if (!r || !r.success || !r.token) throw new ApiError("Login failed — check your email and password.", 401);
+      S.token = r.token; S.user = r.user || null;
+    }
+    $("password").value = "";
+    saveSession($("remember").checked);
+    await enterApp();
+  } catch (err) { showLoginErr(err.status === 401 || err.status === 422 ? "Login failed — check your email and password." : err.message); }
+  finally { btn.disabled = false; btn.textContent = "Log in"; }
+});
+$("toggleToken").onclick = () => {
+  const b = $("tokenBox"), on = b.classList.toggle("hidden");
+  $("email").required = $("password").required = on;
+  $("toggleToken").textContent = on ? "Use a token instead" : "Use email & password";
+};
+$("demoBtn").onclick = () => { S.demo = true; S.user = { name: "Demo user" }; enterApp(); };
+$("logout").onclick = () => signOut();
+$("q").addEventListener("input", renderActs);
+
+/* ---------- demo data (mirrors the shapes seen in the captured responses) ---------- */
+function demoApi(path, form) {
+  return new Promise(res => setTimeout(() => res(demoData(path, form)), 250));
+}
+function demoData(path, form) {
+  const names = [["BASKETBALL", 60, 10], ["FOOTBALL 5", 60, 10], ["TENNIS", 60, 4], ["PADEL", 90, 4], ["GYM", 90, 70], ["SWIMMING POOL", 60, 40]];
+  if (path === "/api/prestation/list") {
+    const lim = new Date(); lim.setDate(lim.getDate() + 14);
+    return { current_page: 1, last_page: 1, data: names.map(([name, duration, capacity], i) => ({
+      id: i + 1, name, description: name, duration: String(duration), capacity: String(capacity), enable: i === 5 ? 0 : 1,
+      max_book: 14, max_week: 3, date_limit: ymd(lim), availabledays: i === 3 ? ["1","2","3","4","5"] : ["1","2","3","4","5","6","7"],
+      campus: { id: 2, name: "Ben Guerir" }, image: null })) };
+  }
+  const m = path.match(/timeslotes\/(\d+)/);
+  if (m) {
+    const id = +m[1], date = form.date_start, cap = [10, 10, 4, 4, 70, 40][id - 1] || 10;
+    let seed = [...(date + id)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+    const data = [];
+    for (let h = 8; h < 22; h += 1.5) {
+      const t = x => `${pad(Math.floor(x))}:${pad((x % 1) * 60)}`;
+      const number = Math.min(cap, Math.round(rnd() * cap * 1.15));
+      data.push({ id: id * 1000 + data.length, time_start: t(h), time_end: t(h + 1.5), capacity: cap, canbook: true,
+        approved: Math.max(0, number - 2), is_pause: rnd() < 0.05, is_maintenance: rnd() < 0.04, number,
+        waiting_list: number >= cap, waiting_available: 10 });
+    }
+    return { current_page: 1, last_page: 1, data };
+  }
+  return {};
+}
+
+/* ---------- theme (auto -> light -> dark) ---------- */
+(function theme() {
+  const root = document.documentElement, btn = $("themeBtn");
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const get = () => root.getAttribute("data-theme") || "auto";
+  const paint = () => {
+    const m = get(), isDark = m === "dark" || (m === "auto" && mq.matches);
+    btn.textContent = m === "auto" ? "\u25D0" : isDark ? "\u263E" : "\u2600";
+    const label = m === "auto" ? "Theme: auto (follows system)" : "Theme: " + m;
+    btn.title = label; btn.setAttribute("aria-label", label + ". Click to change.");
+  };
+  btn.addEventListener("click", () => {
+    const next = { auto: "light", light: "dark", dark: "auto" }[get()];
+    if (next === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", next);
+    try { next === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", next); } catch {}
+    paint();
+  });
+  mq.addEventListener?.("change", paint);
+  paint();
+})();
+
+/* ---------- boot ---------- */
+(async function boot() {
+  if (S.token) { show("app"); await enterApp(); }
+  else { show("login"); if (_expired) showLoginErr("Your saved session expired — please log in again."); }
+})();
+</script>
+<!--
+  Running it:
+  - Just double-click index.html. If your browser blocks the API calls (CORS from file://), run from this folder:
+        python3 -m http.server 8080      then open  http://localhost:8080
+  - The API answered with "Access-Control-Allow-Origin: *" in your capture, so cross-origin calls should work,
+    but the Authorization header triggers a preflight that I couldn't test from here.
+-->
+</body>
+</html>
